@@ -1,0 +1,82 @@
+READ FIRST (STRICT RULES):
+
+1) The file .kiro/steering/IDENTITY.md is the single source of truth for plugin identity.
+2) BEFORE implementing anything: perform an IDENTITY CONSISTENCY PASS:
+   - Replace ALL remaining references to template branding:
+     WP Forever, wp-forever, wp_forever, WP_FOREVER, Wp_Forever, WPForever
+   - Ensure plugin header fields, textdomain, prefixes, option keys, menu labels match IDENTITY.md.
+   - Do NOT reintroduce template naming.
+   - Keep changes minimal and activation-safe.
+
+3) MVP RULES:
+   - NO TESTS, NO MOCKS, NO PROPERTY-BASED TESTS, NO TEST HARNESS.
+   - Work in SMALL steps (tiny diffs). Avoid big refactors.
+   - Plugin must remain activation-safe at all times.
+   - No new dependencies (no composer packages, no frameworks).
+
+--------------------------------------------------
+PROJECT: Simple Real-World Weather Plugin (Open-Meteo)
+
+We will use Open-Meteo because it requires NO API key and provides:
+- Geocoding: https://geocoding-api.open-meteo.com/v1/search?name=<CITY>
+- Forecast:  https://api.open-meteo.com/v1/forecast?latitude=<LAT>&longitude=<LON>&current=...&hourly=...&daily=...&forecast_days=...
+(If we include an “API key” setting, it is OPTIONAL and not used for Open-Meteo right now, but is stored for future providers.)
+
+TASKS (DO IN ORDER, SMALL STEPS):
+
+Phase 0 — Identity Cleanup (must be first)
+- Do the identity consistency pass and ensure plugin activates.
+
+Phase 1 — Admin Menu + Settings
+1) Add a top-level WP admin menu item titled exactly "<Plugin Name>".
+2) Add a submenu "Settings".
+3) On Settings page, add fields:
+   - City (text) — required (e.g. "Cape Town")
+   - Optional API Key (text) — optional (stored but unused for Open-Meteo)
+   - Units: metric/imperial (optional simple dropdown)
+4) Store settings in wp_options using the plugin’s slug/prefix from IDENTITY.md.
+5) Add basic validation + a “Test Fetch” button (optional but recommended):
+   - When clicked, call geocoding + forecast and show success/error inline.
+   - Cache geocoding results (lat/lon) in an option or transient to avoid repeated lookups.
+
+Phase 2 — Weather Service (backend logic)
+Create a small service layer (minimal classes/functions) that:
+1) Resolves City -> lat/lon using Open-Meteo Geocoding API:
+   - GET https://geocoding-api.open-meteo.com/v1/search?name=<CITY>&count=1
+   - Pick the first result, store lat/lon + resolved name/country.
+2) Fetches forecast using Open-Meteo Forecast API:
+   - current: temperature_2m, relative_humidity_2m, wind_speed_10m, weather_code
+   - hourly (for chart): temperature_2m (next 24 hours)
+   - daily: temperature_2m_max, temperature_2m_min, precipitation_sum, weather_code (next 7 days)
+   - Use timezone=auto
+   - Use forecast_days=7 (and keep it configurable later)
+3) Add caching:
+   - Cache forecast results for 15 minutes (transient) keyed by city/lat/lon + units.
+
+Phase 3 — Shortcodes (front-end)
+Implement these shortcodes (names must use the plugin’s slug/prefix):
+1) [<slug>_weather_current]
+   - Outputs a compact “current weather” card:
+     City name, current temp, humidity, wind, and a human-readable label for weather_code.
+2) [<slug>_weather_forecast days="7"]
+   - Outputs a simple 7-day table:
+     Day, min/max temp, precipitation, weather label.
+3) [<slug>_weather_chart hours="24"]
+   - Outputs a simple temperature chart for the next N hours:
+     Use lightweight inline HTML + SVG (no external JS libraries).
+     Keep it simple and readable.
+
+Constraints for shortcodes:
+- If city is not configured, output a friendly message for admins (and a generic message for visitors).
+- Never fatal error; fail gracefully.
+- Escape output properly (wp_kses / esc_html / esc_attr).
+
+DELIVERY:
+- Implement in small, reviewable increments:
+  Step A: menu + settings save
+  Step B: geocoding client + cached lat/lon
+  Step C: forecast client + caching
+  Step D: shortcode current
+  Step E: shortcode forecast
+  Step F: shortcode chart
+- No tests in this phase.
