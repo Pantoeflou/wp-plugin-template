@@ -185,39 +185,82 @@ Example:
 
 ```markdown
 
-# READ THIS FIRST:
-- IDENTITY.md in .kiro/steering is the source of truth for plugin name/slug/textdomain/prefixes.
-- Do NOT reintroduce any template branding (WP Forever / wp-forever / WP_FOREVER etc).
-- MVP phase = NO TESTS, NO MOCKS, NO PROPERTY-BASED TESTS, NO TEST HARNESS.
-  (We will add tests in a later spec once the plugin is stable.)
-- Work in small, safe steps. Prefer minimal diffs and avoid big refactors.
-- The plugin must activate without fatal errors at every step.
+# READ FIRST (STRICT RULES):
 
-# TASK:
-Implement Spec 001 with the smallest possible code:
-1) Add a minimal admin settings page under Settings → <Plugin Name>
-2) Save one option in wp_options
-3) Show an admin notice only when the option is empty/not configured
+1) The file .kiro/steering/IDENTITY.md is the single source of truth
+   for plugin name, slug, textdomain, prefixes and metadata.
 
-# CONSTRAINTS:
-- No new dependencies (no composer, no external test libs).
-- Do not execute heavy logic at file load time; register hooks on plugins_loaded/init.
-- If something goes wrong, fail gracefully with an admin notice (do not crash WordPress).
+2) Before implementing any feature, perform an IDENTITY CONSISTENCY PASS:
+   - Replace ALL remaining references to:
+       WP Forever
+       wp-forever
+       wp_forever
+       WP_FOREVER
+       Wp_Forever
+       WPForever
+   - Ensure everything matches IDENTITY.md:
+       Plugin header fields
+       Class names
+       Function prefixes
+       Constant prefixes
+       Option keys
+       Text domain
+       Admin menu labels
+       Settings page titles
+   - Remove any leftover template branding.
+   - Do NOT reintroduce template naming.
 
-# DELIVERY:
-- Commit-sized changes: implement one item at a time (settings page → option save → notice).
-- Update docs only if necessary.
+3) After identity cleanup:
+   - Ensure the plugin activates without fatal errors.
+   - Do not proceed if activation would fail.
 
-# Notes
-- Keep code minimal and clean
-- Follow template conventions for naming and file layout
+4) MVP PHASE RULES:
+   - NO TESTS.
+   - NO MOCKS.
+   - NO PROPERTY-BASED TESTS.
+   - NO TEST HARNESS.
+   - Do not scaffold testing infrastructure.
+   - Tests will be added in a later phase only after manual verification.
+
+5) ENGINEERING RULES:
+   - Work in SMALL incremental steps.
+   - Prefer minimal diffs.
+   - Avoid large refactors.
+   - Avoid introducing new dependencies.
+   - Do not execute heavy logic at file load time.
+   - Hook logic into plugins_loaded or init.
+   - If something fails, fail gracefully with an admin notice.
+   - Plugin must remain activation-safe at all times.
+
+--------------------------------------------------
+
+# TASKS:
+
+## Phase 1 – Identity Cleanup
+- Perform the identity consistency pass.
+- Confirm that no template branding remains.
+- Keep changes minimal and safe.
+
+## Phase 2 – MVP Feature
+Implement Spec 001:
+
+1) Add a minimal settings page under:
+   Settings → <Plugin Name>
+
+2) Save one option in wp_options.
+
+3) Show an admin notice only when the option is empty.
+
+# Deliver this in small, reviewable increments:
+- First: settings page scaffold
+- Then: option persistence
+- Then: admin notice
+
 ```
 
 Sample Kiro prompt:
 
-Implement Spec 001 using the existing template conventions.
-Keep the settings page minimal, store one option in wp_options, and add an admin notice when the option is not set.
-Ensure activation has no warnings/errors and update any docs needed.
+Provided above
 
 ---
 
