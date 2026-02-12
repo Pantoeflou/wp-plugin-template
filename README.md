@@ -169,21 +169,31 @@ Create:
 Example:
 
 ```markdown
-# Spec 001 - Plugin MVP
 
-## Goal
-Create the MVP plugin skeleton that:
-- Adds an admin settings page
-- Saves one option to wp_options
-- Displays an admin notice when not configured
+# READ THIS FIRST:
+- IDENTITY.md in .kiro/steering is the source of truth for plugin name/slug/textdomain/prefixes.
+- Do NOT reintroduce any template branding (WP Forever / wp-forever / WP_FOREVER etc).
+- MVP phase = NO TESTS, NO MOCKS, NO PROPERTY-BASED TESTS, NO TEST HARNESS.
+  (We will add tests in a later spec once the plugin is stable.)
+- Work in small, safe steps. Prefer minimal diffs and avoid big refactors.
+- The plugin must activate without fatal errors at every step.
 
-## Acceptance Criteria
-- Plugin activates without errors
-- Settings page visible under Settings → <Plugin Name>
-- Option is saved and persists after reload
-- Admin notice shows only when option is empty
+# TASK:
+Implement Spec 001 with the smallest possible code:
+1) Add a minimal admin settings page under Settings → <Plugin Name>
+2) Save one option in wp_options
+3) Show an admin notice only when the option is empty/not configured
 
-## Notes
+# CONSTRAINTS:
+- No new dependencies (no composer, no external test libs).
+- Do not execute heavy logic at file load time; register hooks on plugins_loaded/init.
+- If something goes wrong, fail gracefully with an admin notice (do not crash WordPress).
+
+# DELIVERY:
+- Commit-sized changes: implement one item at a time (settings page → option save → notice).
+- Update docs only if necessary.
+
+# Notes
 - Keep code minimal and clean
 - Follow template conventions for naming and file layout
 ```

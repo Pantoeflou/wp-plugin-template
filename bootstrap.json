@@ -1,5 +1,20 @@
 {
-  "slug": "my-plugin",
-  "name": "My Plugin",
-  "skip_npm": false
+  "plugin": {
+    "slug": "my-plugin",
+    "name": "My Plugin",
+    "description": "Short description of what the plugin does (used in header + identity).",
+    "plugin_url": "https://example.com/my-plugin",
+    "author": "Your Name",
+    "author_url": "https://example.com",
+    "textdomain": "my-plugin",
+    "domain_path": "/languages",
+    "version": "0.1.0",
+    "requires_wp": "6.0",
+    "requires_php": "8.0",
+    "license": "GPL-2.0-or-later",
+    "license_uri": "https://www.gnu.org/licenses/gpl-2.0.html"
+  },
+  "dev": {
+    "skip_npm": false
+  }
 }

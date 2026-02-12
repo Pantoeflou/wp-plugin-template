@@ -248,6 +248,116 @@ def load_bootstrap_json(repo_root: Path) -> dict:
         return {}
     return json.loads(p.read_text(encoding="utf-8"))
 
+
+def get_plugin_cfg(cfg: dict) -> dict:
+    """
+    Supports both legacy flat schema:
+      { "slug": "...", "name": "...", "skip_npm": false }
+    and new schema:
+      { "plugin": {...}, "dev": {...} }
+    """
+    if "plugin" in cfg:
+        return cfg.get("plugin", {}) or {}
+
+    # legacy fallback
+    plugin = {}
+    if "slug" in cfg:
+        plugin["slug"] = cfg.get("slug")
+    if "name" in cfg:
+        plugin["name"] = cfg.get("name")
+    if "textdomain" in cfg:
+        plugin["textdomain"] = cfg.get("textdomain")
+    return plugin
+
+
+def get_dev_cfg(cfg: dict) -> dict:
+    if "dev" in cfg:
+        return cfg.get("dev", {}) or {}
+
+    # legacy fallback
+    return {"skip_npm": bool(cfg.get("skip_npm", False))}
+
+def write_identity_md(repo_root: Path, plugin: dict) -> None:
+    """
+    Generate an identity lock for Kiro so it cannot 'drift' the plugin back
+    to template naming (e.g., WP Forever).
+    """
+    slug = plugin.get("slug", "").strip()
+    name = plugin.get("name", "").strip()
+    if not slug or not name:
+        return
+
+    textdomain = (plugin.get("textdomain") or slug).strip()
+    domain_path = (plugin.get("domain_path") or "/languages").strip()
+
+    identity_dir = repo_root / ".kiro" / "steering"
+    identity_dir.mkdir(parents=True, exist_ok=True)
+
+    identity_path = identity_dir / "IDENTITY.md"
+
+    const_prefix = slug_to_const(slug)
+    func_prefix = slug_to_us(slug)
+    class_prefix = slug_to_class_prefix(slug)
+
+    # Optional metadata
+    description = (plugin.get("description") or "").strip()
+    plugin_url = (plugin.get("plugin_url") or "").strip()
+    author = (plugin.get("author") or "").strip()
+    author_url = (plugin.get("author_url") or "").strip()
+    version = (plugin.get("version") or "").strip()
+    requires_wp = (plugin.get("requires_wp") or "").strip()
+    requires_php = (plugin.get("requires_php") or "").strip()
+    license_name = (plugin.get("license") or "").strip()
+    license_uri = (plugin.get("license_uri") or "").strip()
+
+    lines = []
+    lines.append("# Plugin Identity (Source of Truth)")
+    lines.append("")
+    lines.append("This file is the **single source of truth** for plugin identity.")
+    lines.append("")
+    lines.append("## Hard Rules")
+    lines.append("- Do **not** reintroduce any template branding such as `WP Forever`, `wp-forever`, `WP_FOREVER`, etc.")
+    lines.append("- If any code/docs conflict with this file, **update the code/docs to match this file**.")
+    lines.append("- Prefer **small, activation-safe changes**; avoid big refactors unless requested.")
+    lines.append("")
+    lines.append("## Identity")
+    lines.append(f"- **Plugin Name:** {name}")
+    lines.append(f"- **Plugin Slug:** {slug}")
+    lines.append(f"- **Text Domain:** {textdomain}")
+    lines.append(f"- **Domain Path:** {domain_path}")
+    if version:
+        lines.append(f"- **Version:** {version}")
+    if description:
+        lines.append(f"- **Description:** {description}")
+    if plugin_url:
+        lines.append(f"- **Plugin URL:** {plugin_url}")
+    if author:
+        lines.append(f"- **Author:** {author}")
+    if author_url:
+        lines.append(f"- **Author URL:** {author_url}")
+    if requires_wp:
+        lines.append(f"- **Requires at least (WP):** {requires_wp}")
+    if requires_php:
+        lines.append(f"- **Requires PHP:** {requires_php}")
+    if license_name:
+        lines.append(f"- **License:** {license_name}")
+    if license_uri:
+        lines.append(f"- **License URI:** {license_uri}")
+    lines.append("")
+    lines.append("## Naming Conventions")
+    lines.append(f"- **PHP function/variable prefix:** `{func_prefix}_`")
+    lines.append(f"- **PHP class prefix:** `{class_prefix}_`")
+    lines.append(f"- **PHP constant prefix:** `{const_prefix}_`")
+    lines.append("")
+    lines.append("## Operational Constraints")
+    lines.append("- Plugin must **activate without fatal errors**.")
+    lines.append("- Avoid doing work at file-load time; hook into `plugins_loaded`/`init`.")
+    lines.append("- If something is missing, fail gracefully (admin notice) instead of crashing WP.")
+    lines.append("")
+
+    identity_path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+    print(f"✅ Wrote identity lock file: {identity_path}")
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--slug", help="Plugin slug (kebab-case), e.g. my-plugin")
@@ -256,10 +366,19 @@ def main() -> int:
     args = ap.parse_args()
 
     cfg = load_bootstrap_json(REPO_ROOT)
+    plugin = get_plugin_cfg(cfg)
+    dev = get_dev_cfg(cfg)
 
-    slug = args.slug or cfg.get("slug")
-    name = args.name or cfg.get("name")
-    skip_npm = bool(args.skip_npm or cfg.get("skip_npm", False))
+    # Flags override json (handy for quick one-offs)
+    if args.slug:
+        plugin["slug"] = args.slug
+    if args.name:
+        plugin["name"] = args.name
+
+    slug = (plugin.get("slug") or "").strip()
+    name = (plugin.get("name") or "").strip()
+
+    skip_npm = bool(args.skip_npm or dev.get("skip_npm", False))
 
     if not slug or not name:
         print("❌ Missing slug/name. Provide via flags or bootstrap.json.")
@@ -268,12 +387,22 @@ def main() -> int:
 
     validate_slug(slug)
 
+    # Ensure textdomain defaults to slug
+    plugin.setdefault("textdomain", slug)
+
     print(f"Repo root: {REPO_ROOT}")
+
+    # 1) Lock identity for Kiro
+    write_identity_md(REPO_ROOT, plugin)
+
+    # 2) Fix MCP config paths
     update_mcp_json(REPO_ROOT)
 
+    # 3) Install MCP deps
     if not skip_npm:
         npm_ci(REPO_ROOT)
 
+    # 4) Rename plugin identifiers (slug/name/prefixes)
     rename_plugin(REPO_ROOT, slug, name)
 
     print("\nAll done ✅")
