@@ -1,0 +1,170 @@
+/**
+ * WP Forever - Admin Styles
+ *
+ * Styles for the plugin's admin interface.
+ * Loaded via wp_enqueue_style() in WP_Forever_Admin::enqueue_styles().
+ *
+ * Guidelines:
+ * - Prefix all custom classes with 'wp-forever-' to avoid conflicts
+ * - Use WordPress admin color variables when possible
+ * - Keep styles minimal and specific to plugin UI
+ * - Test in both light and dark admin color schemes
+ *
+ * @package WP_Forever
+ * @since   0.1.0
+ */
+
+/*
+|--------------------------------------------------------------------------
+| Variables
+|--------------------------------------------------------------------------
+|
+| Define reusable values here. WordPress admin uses these CSS variables:
+| --wp-admin-theme-color: Primary accent color
+| --wp-admin-theme-color-darker-10: Darker variant for hover states
+|
+*/
+
+:root {
+	--wp-forever-spacing-sm: 8px;
+	--wp-forever-spacing-md: 16px;
+	--wp-forever-spacing-lg: 24px;
+	--wp-forever-border-radius: 4px;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Base Styles
+|--------------------------------------------------------------------------
+|
+| Placeholder styles — add your admin UI styles here.
+|
+*/
+
+/* Example: Plugin settings page wrapper */
+.wp-forever-settings-wrap {
+	max-width: 800px;
+	margin: var(--wp-forever-spacing-lg) 0;
+}
+
+/* Example: Section headers */
+.wp-forever-section-header {
+	margin-bottom: var(--wp-forever-spacing-md);
+	padding-bottom: var(--wp-forever-spacing-sm);
+	border-bottom: 1px solid #c3c4c7;
+}
+
+/* Example: Form field wrapper */
+.wp-forever-field {
+	margin-bottom: var(--wp-forever-spacing-md);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Settings Page Styles
+|--------------------------------------------------------------------------
+|
+| Styles for the plugin settings page (Settings → WP Forever).
+| Most styling uses WordPress defaults; these are enhancements.
+|
+*/
+
+/* Settings page content wrapper */
+.wp-forever-settings-content {
+	margin-top: var(--wp-forever-spacing-md);
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: var(--wp-forever-border-radius);
+	padding: var(--wp-forever-spacing-md);
+}
+
+/* Tab info sections at bottom of each tab */
+.wp-forever-tab-info {
+	margin-top: var(--wp-forever-spacing-lg);
+	padding-top: var(--wp-forever-spacing-md);
+	border-top: 1px solid #c3c4c7;
+}
+
+.wp-forever-tab-info h3 {
+	margin-top: 0;
+	margin-bottom: var(--wp-forever-spacing-sm);
+}
+
+.wp-forever-tab-info h4 {
+	margin-top: var(--wp-forever-spacing-md);
+	margin-bottom: var(--wp-forever-spacing-sm);
+}
+
+.wp-forever-tab-info ul {
+	margin-left: var(--wp-forever-spacing-md);
+}
+
+.wp-forever-tab-info p:last-child {
+	margin-bottom: 0;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Notice Styles
+|--------------------------------------------------------------------------
+|
+| Enhancements for WP Forever admin notices.
+| Uses WordPress notice classes as base.
+|
+*/
+
+/* Plugin-specific notice styling */
+.wp-forever-notice {
+	/* No additional styling needed — uses WP defaults */
+}
+
+/* Welcome notice specific styling */
+.wp-forever-notice[data-notice-id="welcome"] {
+	border-left-width: 4px;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Button Styles
+|--------------------------------------------------------------------------
+*/
+
+/* Reset notices button on Settings page */
+#wp-forever-reset-notices {
+	margin-top: var(--wp-forever-spacing-sm);
+}
+
+#wp-forever-reset-notices:disabled {
+	cursor: not-allowed;
+}
+
+/*
+|--------------------------------------------------------------------------
+| System Info Table (Advanced Tab)
+|--------------------------------------------------------------------------
+*/
+
+.wp-forever-tab-info .widefat {
+	max-width: 500px;
+}
+
+.wp-forever-tab-info .widefat td {
+	padding: 8px 10px;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Responsive Adjustments
+|--------------------------------------------------------------------------
+*/
+
+@media screen and (max-width: 782px) {
+	.wp-forever-settings-content {
+		padding: var(--wp-forever-spacing-sm);
+	}
+
+	.wp-forever-tab-info {
+		margin-top: var(--wp-forever-spacing-md);
+		padding-top: var(--wp-forever-spacing-sm);
+	}
+}

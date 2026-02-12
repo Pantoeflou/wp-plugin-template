@@ -1,0 +1,21 @@
+/**
+ * WP Forever — public styles.
+ *
+ * Keep public CSS as small as possible. Load conditionally when you can.
+ * Prefix your selectors to avoid theme conflicts.
+ */
+
+.wp-forever-box {
+	padding: 12px;
+	border: 1px solid #dcdcdc;
+	border-radius: 6px;
+}
+
+.wp-forever-box__title {
+	margin: 0 0 8px;
+	font-weight: 600;
+}
+
+.wp-forever-box__muted {
+	opacity: 0.8;
+}
