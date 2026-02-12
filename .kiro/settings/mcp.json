@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "kiro-local-wp": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Rome\\OneDrive\\WP Development\\Kiro\\mcp\\server.mjs"
+      ],
+      "autoApprove": [
+        "wp_test"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\Rome\\OneDrive\\WP Development\\Kiro"
+      ]
+    }
+  }
+}

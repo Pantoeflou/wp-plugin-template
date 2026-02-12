@@ -1,0 +1,57 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: kiro_wp_db
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wp
+      MYSQL_PASSWORD: wp
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  wordpress:
+    image: wordpress:php8.2-apache
+    container_name: kiro_wp
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      # Persist WP core/files so you don't re-download every time
+      - wp_data:/var/www/html
+      # Mount your plugin into wp-content/plugins
+      - ../plugin:/var/www/html/wp-content/plugins/kiro-sandbox:delegated
+
+  wpcli:
+    image: wordpress:cli
+    container_name: kiro_wp_cli
+    depends_on:
+      db:
+        condition: service_healthy
+      wordpress:
+        condition: service_started
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wp_data:/var/www/html
+      - ../plugin:/var/www/html/wp-content/plugins/kiro-sandbox:delegated
+    entrypoint: ["sh", "-lc", "sleep infinity"]
+
+volumes:
+  db_data:
+  wp_data:
