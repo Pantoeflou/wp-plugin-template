@@ -1,0 +1,5 @@
+{
+  "slug": "my-plugin",
+  "name": "My Plugin",
+  "skip_npm": false
+}
